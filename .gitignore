@@ -47,39 +47,3 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
-
-# ignore output netcdf in any subfolder
-02_data/03_CHELSA_paleo/**/*.nc
-
-# Allow subfolders to be included
-!02_data/03_CHELSA_paleo/**/
-
-# Allow .txt files inside the output subfolders (input_order.txt)
-!02_data/03_CHELSA_paleo/**/*.txt
-!02_data/03_CHELSA_paleo/*.txt
-
-# ignore chelsa (v1.2) and TrACE climatology and deltas
-02_data/02_processed/**/*.tif
-02_data/02_processed/**/*.nc
-
-03_comparisons/*.tif
-
-# ignore temp delta file
-delta_remapped_tmp.nc
-02_data/02_processed/oro_high.nc
-
-# ignore markdown outputs and temp files
-03_comparisons/*.html
-03_comparisons/*/figure-html/*.png
-03_comparisons/bc_investigations/*.nc
-03_comparisons/scratch/*.tif
-03_comparisons/bc_investigations/*.tif
-03_comparisons/scratch/*.nc
-python_test/qdm_trained_pr_Sahul.nc
-scratch/*
-fine_scale_interp.nc
-fine_scale_subset.nc
-02_data/01_inputs/TraCE21_fine_elevation_22kaBP_1500CE_withBathy_inttime.nc
-02_data/01_inputs/TraCE21_fine_elevation_22kaBP_1500CE_withBathy.nc
-02_data/01_inputs/TraCE21_22kaBP_1500CE_mask_inttime.nc
-02_data/01_inputs/TraCE21_22kaBP_1500CE_mask.nc
