@@ -1,0 +1,85 @@
+# History files
+.Rhistory
+.Rapp.history
+
+# Session Data files
+.RData
+.RDataTmp
+
+# User-specific files
+.Ruserdata
+
+# Example code in package build process
+*-Ex.R
+
+# Output files from R CMD build
+/*.tar.gz
+
+# Output files from R CMD check
+/*.Rcheck/
+
+# RStudio files
+.Rproj.user/
+
+# produced vignettes
+vignettes/*.html
+vignettes/*.pdf
+
+# OAuth2 token, see https://github.com/hadley/httr/releases/tag/v0.3
+.httr-oauth
+
+# knitr and R markdown default cache directories
+*_cache/
+/cache/
+
+# Temporary files created by R markdown
+*.utf8.md
+*.knit.md
+
+# R Environment Variables
+.Renviron
+
+# pkgdown site
+docs/
+
+# translation temp files
+po/*~
+
+# RStudio Connect folder
+rsconnect/
+
+# ignore output netcdf in any subfolder
+02_data/03_CHELSA_paleo/**/*.nc
+
+# Allow subfolders to be included
+!02_data/03_CHELSA_paleo/**/
+
+# Allow .txt files inside the output subfolders (input_order.txt)
+!02_data/03_CHELSA_paleo/**/*.txt
+!02_data/03_CHELSA_paleo/*.txt
+
+# ignore chelsa (v1.2) and TrACE climatology and deltas
+02_data/02_processed/**/*.tif
+02_data/02_processed/**/*.nc
+
+03_comparisons/*.tif
+
+# ignore temp delta file
+delta_remapped_tmp.nc
+02_data/02_processed/oro_high.nc
+
+# ignore markdown outputs and temp files
+03_comparisons/*.html
+03_comparisons/*/figure-html/*.png
+03_comparisons/bc_investigations/*.nc
+03_comparisons/scratch/*.tif
+03_comparisons/bc_investigations/*.tif
+03_comparisons/scratch/*.nc
+python_test/qdm_trained_pr_Sahul.nc
+scratch/*
+fine_scale_interp.nc
+fine_scale_subset.nc
+02_data/01_inputs/TraCE21_fine_elevation_22kaBP_1500CE_withBathy_inttime.nc
+02_data/01_inputs/TraCE21_fine_elevation_22kaBP_1500CE_withBathy.nc
+02_data/01_inputs/TraCE21_22kaBP_1500CE_mask_inttime.nc
+02_data/01_inputs/TraCE21_22kaBP_1500CE_mask.nc

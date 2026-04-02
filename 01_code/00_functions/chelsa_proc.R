@@ -1,0 +1,70 @@
+chelsa_proc <- function(variable, dir, outdir, type = "\\.tif$",
+                        mask = NULL,
+                        ymin = 1980, ymax = 1989,
+                        tras_ext = ext(105, 160, -50, 7), # Sahul
+                        cores = 10L, load_exist = TRUE,
+                        ...) {
+  require(pbapply)
+  require(gtools)
+  require(terra)
+  match.arg(arg = variable, choices = c("prec", "tmax", "tmin", "tmean"))
+  v1 <- variable
+  from <- c("prec", "tmax", "tmin", "tmean")
+  to <- c("pr", "tasmax", "tasmin", "tas")
+  variable <- to[match(v1, from)]
+  fil.list <- mixedsort(list.files(dir, pattern = type, full.names = TRUE))
+  fil.list <- fil.list[grepl(pattern = v1, fil.list)]
+  stopifnot("Not enough years of data for CHELSA data..." = length(fil.list) == ((ymax + 1) - ymin) * 12)
+  # extract the years from fil.list
+  years <- as.integer(unique(gsub(".*_(\\d{4})_.*", "\\1", fil.list)))
+  years <- years[years >= ymin & years <= ymax]
+  ann_CHELSA <- pbsapply(years, function(year, ...) {
+    fil.list.annual <- fil.list[grepl(pattern = year, fil.list)]
+    out_fil <- file.path(outdir, sprintf("CHELSA_%s_%s_V.1.2.tif", variable, year))
+    if (file.exists(out_fil) & load_exist) {
+      return(out_fil)
+    }
+    if (length(fil.list.annual) < 12) {
+      stop("Less than 12 months of data for year: ", year)
+    }
+    # load and crop to AOI
+    chelsa <- rast(fil.list.annual, win = tras_ext, snap = "out")
+    if (!is.null(mask)) {
+      if (inherits(x = mask, "PackedSpatVector")) {
+        mask <- terra::unwrap(mask)
+      }
+      chelsa <- terra::mask(chelsa, mask, touches = TRUE)
+    }
+    if (variable == "pr") {
+      # conv_rate = 24(hours)*3600(seconds in hour) = [86400] * num_days_in_month
+      conv_rate <- (86400 * c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31))
+      chelsa <- ifel(chelsa == 65535, NA, chelsa)
+      chelsa <- (chelsa / conv_rate)
+      units(chelsa) <- "kg m-2 s-1"
+      varnames(chelsa) <- variable
+      time(chelsa) <- seq(as.Date(paste0(year, "-01-16")), by = "months", l = 12)
+      names(chelsa) <- format(time(chelsa), "%b%Y")
+    } else if (variable %in% c("tasmin", "tasmax", "tas")) {
+      chelsa <- setValues(chelsa, round((terra::values(chelsa) / 10) - 273.15, 2))
+      units(chelsa) <- "deg_C"
+      varnames(chelsa) <- variable
+      time(chelsa) <- seq(as.Date(paste0(year, "-01-16")), by = "months", l = 12)
+      names(chelsa) <- format(time(chelsa), "%b%Y")
+    }
+    if (variable == "pr") {
+      writeRaster(chelsa, out_fil,
+        gdal = c("COMPRESS=LZW", "TFW=NO", "PREDICTOR=3"),
+        overwrite = TRUE
+      )
+    } else if (variable %in% c("tasmin", "tasmax", "tas")) {
+      writeRaster(chelsa, out_fil,
+        gdal = c("COMPRESS=LZW", "TFW=NO", "PREDICTOR=3"),
+        overwrite = TRUE
+      )
+    }
+    return(out_fil)
+  },
+  cl = ifelse(!is.null(cores), cores, NULL)
+  )
+  return(ann_CHELSA)
+}
