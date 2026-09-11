@@ -2,7 +2,7 @@
 
 Scripts for downscaling TraCE-21ka climate data using the CHELSA v1.2 algorithm for the Sahul region from 22ka BP to 1989 C.E. Additional scripts are provided to harmonise CMIP6 simulations under a range of SSP scenarios to create a seamless dataset to 2100.
 
-!![TraCESahul workflow](TraCESahul.png)
+![TraCESahul workflow](TraCESahul.png)
 
 *TraCE-21ka model output at 3.75° resolution (left) and downscaled TraCE-Sahul data at 0.05° resolution (centre), both showing 1961–1990 conditions. The right panel shows downscaled CMIP6 data under SSP5-8.5 for 2100. The top row shows average annual temperature (°C), and the bottom row shows average daily precipitation (mm/day).*
 
