@@ -43,7 +43,7 @@ The R scripts require several CRAN packages, including `terra`, `data.table`, an
 
 Close the repository with:
 
-  ```bash
+```bash
 git clone https://github.com/GlobalEcologyLab/TraCESahul.git
 cd TraCESahul
 ```
@@ -73,7 +73,74 @@ TraCESahul/
 
 The scripts are designed to operate on large climate datasets and associated topographic and climatological inputs. Input and processed data are **not** included in the repository.
 
-Input data requirements can be found [here](https://gdex.ucar.edu/datasets/d651050/dataaccess/), with data available for download from the [NCAR Geoscience Data Exchange](https://gdex.ucar.edu/datasets/d651050/dataaccess/).
+Input data requirements can be found [here](https://gitlabext.wsl.ch/karger/chelsa_paleo#input-data), with data available for download from the [NCAR Geoscience Data Exchange](https://gdex.ucar.edu/datasets/d651050/dataaccess/).
+
+## Changes to `chelsa_paleo`
+
+Some minor adjustments were made to the `chelsa_paleo` Python package to accommodate the processing of the input data and the parallel processing workflow. These changes are described below.
+
+### Limiting SAGA threads
+
+`saga_api` was configured to use a [maximum of two OpenMP threads](https://saga-gis.sourceforge.io/saga_api_doc/html/api__core_8h.html#a79569be6b96c197289c8c4cd7a4811b2) by adding:
+
+```python
+saga_api.SG_OMP_Set_Max_Num_Threads(2)
+```
+
+This was necessary to allow multiple timesteps to be processed concurrently without each process attempting to use all available CPU cores (the default).
+
+The modified section of `Load_Tool_Libraries` is:
+
+```python
+def Load_Tool_Libraries(Verbose):
+    saga_api.SG_UI_Msg_Lock(True)
+    if os.name == 'nt':  # Windows
+        os.environ['PATH'] = os.environ['PATH'] + ';' + os.environ['SAGA_32'] + '/dll'
+        saga_api.SG_Get_Tool_Library_Manager().Add_Directory(os.environ['SAGA_32'] + '/tools', False)
+    else:  # Linux
+        saga_api.SG_Get_Tool_Library_Manager().Add_Directory('/usr/local/lib/saga/', False)
+    saga_api.SG_UI_Msg_Lock(False)
+
+    saga_api.SG_OMP_Set_Max_Num_Threads(2)  ##< Maximum threads hardcoded to 2
+
+    if Verbose == True:
+        print 'Python - Version ' + sys.version
+        print saga_api.SAGA_API_Get_Version()
+        print 'number of maximum threads used: ' + str(saga_api.SG_OMP_Get_Max_Num_Threads()) ##< print number of threads
+        print 'number of loaded libraries: ' + str(saga_api.SG_Get_Tool_Library_Manager().Get_Count())
+        print
+
+    return saga_api.SG_Get_Tool_Library_Manager().Get_Count()
+```
+
+### Reading the DEM
+
+The DEM input files used in this analysis contain a single layer, regardless of the timestep being downscaled. This is a consequence of the upstream processing, where the low- and high-resolution DEMs were subset using `aux_step` ([see the relevant processing step](https://github.com/GlobalEcologyLab/TraCESahul/blob/9228394b31e3d56762e2e10c10f4354329de095c/01_code/01_Decadal_pre1500_halfdegree/04_CHELSA_run_parallel_chunks.sh#L66-L83)).
+
+Consequently, the DEM does not need to be indexed using the current timestep (`self.time`), and `Get_Grid(0)` is used to read the only layer:
+
+```python
+def _build_(self, var):
+    if var == 'demproj':
+        # ds1 = import_ncdf(self.INPUT + 'orog/oro_high.nc').Get_Grid(self.time)
+        ds1 = import_ncdf(self.INPUT + 'orog/oro_high.nc').Get_Grid(0)  ##< DEM contains a single layer
+        set_2_latlong(ds1)
+        template = import_ncdf(self.INPUT + 'static/merc_template.nc').Get_Grid(0)
+        ds = pj2merc(ds1, template)
+        setattr(self, var, ds.asGrid())
+
+    if var == 'dem_low':
+        # ds = import_ncdf(self.INPUT + 'orog/oro.nc').Get_Grid(self.time)
+        ds = import_ncdf(self.INPUT + 'orog/oro.nc').Get_Grid(0)
+        ds = change_data_storage(ds)
+        setattr(self, var, ds)
+
+    if var == 'dem_high':
+        # ds = import_ncdf(self.INPUT + 'orog/oro_high.nc').Get_Grid(self.time)
+        ds = import_ncdf(self.INPUT + 'orog/oro_high.nc').Get_Grid(0)
+        ds = change_data_storage(ds)
+        setattr(self, var, ds)
+```
 
 ## Citation
 
